@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36603.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SOSGame", "SOSGame\SOSGame.csproj", "{68CFBDC9-E381-4E7B-9502-E4FEE62804D2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SOSGame", "SOSGame-2\SOSGame.csproj", "{68CFBDC9-E381-4E7B-9502-E4FEE62804D2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SOSGame.Tests", "SOSGame.Tests\SOSGame.Tests.csproj", "{3C2D298E-A56D-4DBA-9B52-7AA432656B42}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SOSGame.Tests", "SOSGame-2.Tests\SOSGame.Tests.csproj", "{3C2D298E-A56D-4DBA-9B52-7AA432656B42}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
