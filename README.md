@@ -6,7 +6,6 @@ A Windows Forms application implementing the SOS board game with both Simple and
 
 **Course:** CS 449 - Software Engineering  
 **Current Sprint:** Sprint 4  
-**GitHub:** https://github.com/ishraqfatin7/SOSGame
 
 ## Sprint 4 Deliverables - Computer Opponent ✅
 
