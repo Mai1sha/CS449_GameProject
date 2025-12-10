@@ -43,6 +43,8 @@
             redPlayerLabel = new Label();
             redHumanRadio = new RadioButton();
             redComputerRadio = new RadioButton();
+            chkRecordGame = new CheckBox();
+            btnReplay = new Button();
             bluePlayerGroupBox.SuspendLayout();
             redPlayerGroupBox.SuspendLayout();
             SuspendLayout();
@@ -221,12 +223,36 @@
             redComputerRadio.Text = "Computer";
             redComputerRadio.UseVisualStyleBackColor = true;
             // 
+            // chkRecordGame
+            // 
+            chkRecordGame.AutoSize = true;
+            chkRecordGame.Font = new Font("Segoe UI", 10F);
+            chkRecordGame.Location = new Point(42, 360);
+            chkRecordGame.Name = "chkRecordGame";
+            chkRecordGame.Size = new Size(133, 27);
+            chkRecordGame.TabIndex = 12;
+            chkRecordGame.Text = "Record game";
+            chkRecordGame.UseVisualStyleBackColor = true;
+            // 
+            // btnReplay
+            // 
+            btnReplay.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            btnReplay.Location = new Point(390, 380);
+            btnReplay.Name = "btnReplay";
+            btnReplay.Size = new Size(120, 50);
+            btnReplay.TabIndex = 13;
+            btnReplay.Text = "Replay";
+            btnReplay.UseVisualStyleBackColor = true;
+            btnReplay.Click += btnReplay_Click;
+            // 
             // StartForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(550, 470);
             MinimumSize = new Size(550, 470);
+            Controls.Add(btnReplay);
+            Controls.Add(chkRecordGame);
             Controls.Add(redPlayerGroupBox);
             Controls.Add(bluePlayerGroupBox);
             Controls.Add(generalGameButton);
@@ -263,5 +289,7 @@
         private Label redPlayerLabel;
         private RadioButton redHumanRadio;
         private RadioButton redComputerRadio;
+        private CheckBox chkRecordGame;
+        private Button btnReplay;
     }
 }

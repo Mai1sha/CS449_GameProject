@@ -38,7 +38,8 @@ namespace SOSGame
 
         private void StartGame(int boardSize, GameMode gameMode, PlayerType bluePlayerType, PlayerType redPlayerType)
         {
-            _gameForm = new GameForm(boardSize, gameMode, bluePlayerType, redPlayerType);
+            bool enableRecording = chkRecordGame.Checked;
+            _gameForm = new GameForm(boardSize, gameMode, bluePlayerType, redPlayerType, enableRecording);
             _gameForm.FormClosed += GameForm_FormClosed;
             _gameForm.Show();
             this.Hide();
@@ -83,6 +84,48 @@ namespace SOSGame
         private PlayerType GetRedPlayerType()
         {
             return redComputerRadio.Checked ? PlayerType.Computer : PlayerType.Human;
+        }
+
+        private void btnReplay_Click(object sender, EventArgs e)
+        {
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Title = "Select Game Recording";
+                openFileDialog.Filter = "SOS Game Recordings (*.sos)|*.sos|All Files (*.*)|*.*";
+                openFileDialog.FilterIndex = 1;
+                
+                // Use RecordingsDirectoryManager to get the correct path
+                string recordingsPath = RecordingsDirectoryManager.GetRecordingsDirectoryPath();
+                if (Directory.Exists(recordingsPath))
+                {
+                    openFileDialog.InitialDirectory = recordingsPath;
+                }
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    string selectedFilePath = openFileDialog.FileName;
+                    LaunchReplayForm(selectedFilePath);
+                }
+            }
+        }
+
+        private void LaunchReplayForm(string filePath)
+        {
+            try
+            {
+                ReplayForm replayForm = new ReplayForm(filePath);
+                replayForm.Show();
+            }
+            catch (FileNotFoundException)
+            {
+                MessageBox.Show("The selected file could not be found.", "File Not Found",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading replay: {ex.Message}", "Load Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }

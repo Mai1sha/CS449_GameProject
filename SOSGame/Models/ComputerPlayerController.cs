@@ -19,22 +19,18 @@ namespace SOSGame.Models
 
         public override Move? GetMove(Board board, GameLogic gameLogic, GameMode gameMode)
         {
-            // Strategy 1: Try to make an SOS (immediate win in Simple, score in General)
             Move? sosMove = FindMoveToCreateSOS(board);
             if (sosMove != null)
                 return sosMove;
 
-            // Strategy 2: Try to block opponent from making SOS
             Move? blockMove = FindMoveToBlockSOS(board);
             if (blockMove != null)
                 return blockMove;
 
-            // Strategy 3: Make a setup move that creates future SOS opportunities
             Move? setupMove = FindStrategicSetupMove(board);
             if (setupMove != null)
                 return setupMove;
 
-            // Strategy 4: Fall back to random valid move
             return GetRandomMove(board);
         }
 
@@ -44,8 +40,6 @@ namespace SOSGame.Models
         private Move? FindMoveToCreateSOS(Board board)
         {
             List<Move> allPossibleMoves = GetAllPossibleMoves(board);
-
-            // Shuffle to add randomness when multiple SOS moves exist
             allPossibleMoves = allPossibleMoves.OrderBy(x => _random.Next()).ToList();
 
             foreach (var move in allPossibleMoves)
@@ -68,7 +62,6 @@ namespace SOSGame.Models
 
             foreach (var move in allPossibleMoves)
             {
-                // Check if opponent could make SOS if we don't take this spot
                 if (IsBlockingMove(board, move))
                 {
                     return move;
@@ -91,32 +84,26 @@ namespace SOSGame.Models
 
             int center = board.Size / 2;
 
-            // Prefer center positions
             var centerMoves = allPossibleMoves
                 .Where(m => Math.Abs(m.Row - center) <= 1 && Math.Abs(m.Col - center) <= 1)
                 .ToList();
 
             if (centerMoves.Any())
             {
-                // Randomly choose between S and O for variety
-                // Slightly prefer O (60%) in center as it can be part of SOS in 4 directions
                 var centerO = centerMoves.Where(m => m.Value == CellValue.O).ToList();
                 var centerS = centerMoves.Where(m => m.Value == CellValue.S).ToList();
                 
                 if (centerO.Any() && centerS.Any())
                 {
-                    // 60% chance to place O, 40% chance to place S
                     if (_random.Next(100) < 60 && centerO.Any())
                         return centerO[_random.Next(centerO.Count)];
                     else if (centerS.Any())
                         return centerS[_random.Next(centerS.Count)];
                 }
                 
-                // Fallback to random center move
                 return centerMoves[_random.Next(centerMoves.Count)];
             }
 
-            // Look for moves adjacent to existing pieces
             var adjacentMoves = allPossibleMoves
                 .Where(m => HasAdjacentPiece(board, m.Row, m.Col))
                 .ToList();
@@ -169,11 +156,8 @@ namespace SOSGame.Models
         /// </summary>
         private bool WouldCreateSOS(Board board, Move move)
         {
-            // Temporarily place the move
             Board testBoard = CloneBoard(board);
             testBoard.PlaceMove(move.Row, move.Col, move.Value);
-
-            // Check if this creates any SOS
             return CheckForSOSAtPosition(testBoard, move.Row, move.Col);
         }
 
@@ -182,9 +166,6 @@ namespace SOSGame.Models
         /// </summary>
         private bool IsBlockingMove(Board board, Move move)
         {
-            // Check if this position completes an SOS pattern
-            // If opponent places S or O here, would they make SOS?
-            
             Move opponentMoveS = new Move(move.Row, move.Col, CellValue.S);
             Move opponentMoveO = new Move(move.Row, move.Col, CellValue.O);
 
@@ -205,7 +186,7 @@ namespace SOSGame.Models
             {
                 return CheckSOSPatternForS(board, row, col);
             }
-            else // CellValue.O
+            else
             {
                 return CheckSOSPatternForO(board, row, col);
             }

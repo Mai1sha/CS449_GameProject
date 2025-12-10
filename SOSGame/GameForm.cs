@@ -16,9 +16,11 @@ namespace SOSGame
         private readonly Button[,] _gridButtons;
         private System.Windows.Forms.Timer? _computerMoveTimer;
         private bool _processingComputerMove;
+        private readonly bool _recordingEnabled;
+        private GameRecorder? _gameRecorder;
 
         public GameForm(int boardSize, GameMode gameMode, PlayerType bluePlayerType = PlayerType.Human, 
-            PlayerType redPlayerType = PlayerType.Human)
+            PlayerType redPlayerType = PlayerType.Human, bool enableRecording = false)
         {
             InitializeComponent();
             InitializeFormSettings(boardSize, gameMode);
@@ -26,12 +28,18 @@ namespace SOSGame
             _gameState = new GameState(boardSize, gameMode, bluePlayerType, redPlayerType);
             _gridButtons = new Button[boardSize, boardSize];
             _processingComputerMove = false;
+            _recordingEnabled = enableRecording;
+
+            if (_recordingEnabled)
+            {
+                _gameRecorder = new GameRecorder();
+                _gameRecorder.StartRecording(boardSize, gameMode, bluePlayerType, redPlayerType);
+            }
 
             WireUpEventHandlers();
             InitializeBoard();
             UpdateUI();
 
-            // Start computer move if Blue is a computer
             if (_gameState.CurrentPlayerController.IsComputer())
             {
                 InitiateComputerMove();
@@ -88,22 +96,14 @@ namespace SOSGame
         private void PositionControlButtons(int boardHeight)
         {
             int controlsY = panelGameBoard.Bottom + 20;
-            int spacing = 10; // Dynamic spacing between controls
+            int spacing = 10;
             
-            // Position btnPlaceS
             btnPlaceS.Location = new Point(CellMargin, controlsY);
-            
-            // Position btnPlaceO dynamically based on btnPlaceS
             btnPlaceO.Location = new Point(btnPlaceS.Right + spacing, controlsY);
-            
-            // Position lblTurn dynamically based on btnPlaceO
             lblTurn.Location = new Point(btnPlaceO.Right + spacing, controlsY + 20);
-            
-            // Position btnNewGame below the buttons
             btnNewGame.Location = new Point(CellMargin, controlsY + 80);
             
-            // Position status labels to the right of the board (with spacing)
-            int labelX = panelGameBoard.Right + 20; // 20px to the right of the board
+            int labelX = panelGameBoard.Right + 20;
             int topLabelY = panelGameBoard.Top;
             
             lblGameStatus.Location = new Point(labelX, topLabelY);
@@ -201,10 +201,25 @@ namespace SOSGame
         private void TryPlaceMoveOnCell(int row, int col, char value)
         {
             CellValue cellValue = value == 'S' ? CellValue.S : CellValue.O;
+            Player currentPlayer = _gameState.CurrentPlayer;
             bool moveSuccessful = _gameState.MakeMove(row, col, cellValue);
 
             if (moveSuccessful)
             {
+                // Record the move if recording is enabled
+                if (_gameRecorder?.IsRecording == true)
+                {
+                    try
+                    {
+                        _gameRecorder.RecordMove(row, col, cellValue, currentPlayer);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Failed to record move:\n{ex.Message}", "Recording Error", 
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                }
+
                 UpdateCellDisplay(row, col, value);
                 UpdateUI();
 
@@ -214,7 +229,6 @@ namespace SOSGame
                 }
                 else if (_gameState.CurrentPlayerController.IsComputer())
                 {
-                    // Initiate computer move after a short delay
                     InitiateComputerMove();
                 }
             }
@@ -234,17 +248,14 @@ namespace SOSGame
 
             _processingComputerMove = true;
 
-            // Disable UI during computer's turn
             btnPlaceS.Enabled = false;
             btnPlaceO.Enabled = false;
 
-            // Update status to show computer is thinking
             string playerName = _gameState.CurrentPlayer == Player.Blue ? "Blue" : "Red";
             lblTurn.Text = $"Computer ({playerName}) is thinking...";
 
-            // Use a timer for delayed execution (creates better UX)
             _computerMoveTimer = new System.Windows.Forms.Timer();
-            _computerMoveTimer.Interval = 500; // 500ms delay
+            _computerMoveTimer.Interval = 500;
             _computerMoveTimer.Tick += ComputerMoveTimer_Tick;
             _computerMoveTimer.Start();
         }
@@ -270,10 +281,25 @@ namespace SOSGame
 
             if (computerMove != null)
             {
+                Player currentPlayer = _gameState.CurrentPlayer;
                 bool moveSuccessful = _gameState.MakeMove(computerMove.Row, computerMove.Col, computerMove.Value);
 
                 if (moveSuccessful)
                 {
+                    // Record the move if recording is enabled
+                    if (_gameRecorder?.IsRecording == true)
+                    {
+                        try
+                        {
+                            _gameRecorder.RecordMove(computerMove.Row, computerMove.Col, computerMove.Value, currentPlayer);
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"Failed to record move:\n{ex.Message}", "Recording Error", 
+                                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        }
+                    }
+
                     char displayValue = computerMove.Value == CellValue.S ? 'S' : 'O';
                     UpdateCellDisplay(computerMove.Row, computerMove.Col, displayValue);
                     UpdateUI();
@@ -285,26 +311,22 @@ namespace SOSGame
                     }
                     else if (_gameState.CurrentPlayerController.IsComputer())
                     {
-                        // If next player is also computer, continue with their move
                         _processingComputerMove = false;
                         InitiateComputerMove();
                     }
                     else
                     {
-                        // Next player is human, re-enable UI
                         _processingComputerMove = false;
                     }
                 }
                 else
                 {
-                    // Move failed (shouldn't happen with correct AI), but handle gracefully
                     _processingComputerMove = false;
                     UpdateUI();
                 }
             }
             else
             {
-                // No valid move available (shouldn't happen, but handle gracefully)
                 _processingComputerMove = false;
                 UpdateUI();
             }
@@ -376,7 +398,6 @@ namespace SOSGame
                 return;
             }
 
-            // Human player - enable both buttons
             btnPlaceS.Enabled = true;
             btnPlaceO.Enabled = true;
 
@@ -398,6 +419,23 @@ namespace SOSGame
 
         private void HandleGameOver()
         {
+            if (_gameRecorder?.IsRecording == true)
+            {
+                try
+                {
+                    _gameRecorder.StopRecording(_gameState.Winner, _gameState.BlueScore, _gameState.RedScore);
+                    string savedPath = _gameRecorder.SaveToFile();
+                    
+                    MessageBox.Show($"Game recorded to:\n{savedPath}", "Recording Saved", 
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to save game recording:\n{ex.Message}", "Recording Error", 
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+
             string message;
             string title = "Game Over";
 
@@ -438,7 +476,6 @@ namespace SOSGame
             ClearAllCells();
             UpdateUI();
 
-            // Start computer move if Blue is a computer
             if (_gameState.CurrentPlayerController.IsComputer())
             {
                 InitiateComputerMove();
