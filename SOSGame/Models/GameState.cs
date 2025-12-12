@@ -8,6 +8,7 @@ namespace SOSGame.Models
         private Player _currentPlayer;
         private readonly PlayerController _bluePlayerController;
         private readonly PlayerController _redPlayerController;
+        private readonly List<(int row, int col, CellValue value, Player player)> _moveHistory;
 
         public Board Board => _board;
         public GameMode Mode => _gameMode;
@@ -21,6 +22,7 @@ namespace SOSGame.Models
         public PlayerController RedPlayerController => _redPlayerController;
         public PlayerController CurrentPlayerController => 
             _currentPlayer == Player.Blue ? _bluePlayerController : _redPlayerController;
+        public IReadOnlyList<(int row, int col, CellValue value, Player player)> MoveHistory => _moveHistory;
 
         public GameState(int boardSize, GameMode gameMode = GameMode.Simple, 
             PlayerType bluePlayerType = PlayerType.Human, PlayerType redPlayerType = PlayerType.Human)
@@ -28,6 +30,7 @@ namespace SOSGame.Models
             _board = new Board(boardSize);
             _gameMode = gameMode;
             _currentPlayer = Player.Blue;
+            _moveHistory = new List<(int row, int col, CellValue value, Player player)>();
 
             _gameLogic = gameMode == GameMode.Simple 
                 ? new SimpleGameLogic(_board) 
@@ -40,9 +43,21 @@ namespace SOSGame.Models
 
         private PlayerController CreatePlayerController(Player player, PlayerType playerType)
         {
-            return playerType == PlayerType.Computer
-                ? new ComputerPlayerController(player)
-                : new HumanPlayerController(player);
+            switch (playerType)
+            {
+                case PlayerType.Computer:
+                    return new ComputerPlayerController(player);
+                case PlayerType.OpenAI:
+                    string? openAIApiKey = OpenAIConfiguration.GetApiKey();
+                    if (string.IsNullOrEmpty(openAIApiKey))
+                    {
+                        throw new InvalidOperationException("OpenAI API key is not configured. Please configure the API key before using OpenAI.");
+                    }
+                    return new OpenAIPlayerController(player, openAIApiKey);
+                case PlayerType.Human:
+                default:
+                    return new HumanPlayerController(player);
+            }
         }
 
         public bool MakeMove(int row, int col, CellValue cellValue)
@@ -54,6 +69,9 @@ namespace SOSGame.Models
 
             if (moveSuccessful)
             {
+                // Record the move in history
+                _moveHistory.Add((row, col, cellValue, _currentPlayer));
+                
                 List<SOSSequence> sosSequences = _gameLogic.CheckForSOS(row, col, _currentPlayer);
                 
                 _gameLogic.UpdateGameState(sosSequences, _currentPlayer);
@@ -92,6 +110,7 @@ namespace SOSGame.Models
             _board.Reset();
             _gameLogic.Reset();
             _currentPlayer = Player.Blue;
+            _moveHistory.Clear();
         }
     }
 }

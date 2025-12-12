@@ -34,5 +34,7 @@ namespace SOSGame.Models
         /// Checks if this controller represents a computer player.
         /// </summary>
         public bool IsComputer() => _playerType == PlayerType.Computer;
+
+        public bool IsOpenAI() => _playerType == PlayerType.OpenAI;
     }
 }

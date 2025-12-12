@@ -3,6 +3,7 @@ namespace SOSGame.Models
     public enum PlayerType
     {
         Human,
-        Computer
+        Computer,
+        OpenAI
     }
 }

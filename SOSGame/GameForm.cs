@@ -40,7 +40,7 @@ namespace SOSGame
             InitializeBoard();
             UpdateUI();
 
-            if (_gameState.CurrentPlayerController.IsComputer())
+            if (_gameState.CurrentPlayerController.IsComputer() || _gameState.CurrentPlayerController.IsOpenAI())
             {
                 InitiateComputerMove();
             }
@@ -221,13 +221,14 @@ namespace SOSGame
                 }
 
                 UpdateCellDisplay(row, col, value);
+                ClearPreviousSelection(); // Clear selection after successful move
                 UpdateUI();
 
                 if (_gameState.IsGameOver)
                 {
                     HandleGameOver();
                 }
-                else if (_gameState.CurrentPlayerController.IsComputer())
+                else if (_gameState.CurrentPlayerController.IsComputer() || _gameState.CurrentPlayerController.IsOpenAI())
                 {
                     InitiateComputerMove();
                 }
@@ -238,9 +239,6 @@ namespace SOSGame
             }
         }
 
-        /// <summary>
-        /// Initiates a computer move with a delay for visual effect.
-        /// </summary>
         private void InitiateComputerMove()
         {
             if (_processingComputerMove || _gameState.IsGameOver)
@@ -251,18 +249,43 @@ namespace SOSGame
             btnPlaceS.Enabled = false;
             btnPlaceO.Enabled = false;
 
-            string playerName = _gameState.CurrentPlayer == Player.Blue ? "Blue" : "Red";
-            lblTurn.Text = $"Computer ({playerName}) is thinking...";
+            if (_gameState.CurrentPlayerController.IsOpenAI())
+            {
+                string playerName = _gameState.CurrentPlayer == Player.Blue ? "Blue" : "Red";
+                lblTurn.Text = $"OpenAI ({playerName}) is thinking...";
+                lblLoadingIndicator.Visible = true;
+                
+                Task.Run(async () =>
+                {
+                    try
+                    {
+                        await ExecuteOpenAIMoveAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            lblLoadingIndicator.Visible = false;
+                            MessageBox.Show($"Error during OpenAI move:\n{ex.Message}", "AI Error", 
+                                MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            _processingComputerMove = false;
+                            UpdateUI();
+                        });
+                    }
+                });
+            }
+            else
+            {
+                string playerName = _gameState.CurrentPlayer == Player.Blue ? "Blue" : "Red";
+                lblTurn.Text = $"Computer ({playerName}) is thinking...";
 
-            _computerMoveTimer = new System.Windows.Forms.Timer();
-            _computerMoveTimer.Interval = 500;
-            _computerMoveTimer.Tick += ComputerMoveTimer_Tick;
-            _computerMoveTimer.Start();
+                _computerMoveTimer = new System.Windows.Forms.Timer();
+                _computerMoveTimer.Interval = 500;
+                _computerMoveTimer.Tick += ComputerMoveTimer_Tick;
+                _computerMoveTimer.Start();
+            }
         }
 
-        /// <summary>
-        /// Handles the computer move timer tick event.
-        /// </summary>
         private void ComputerMoveTimer_Tick(object? sender, EventArgs e)
         {
             _computerMoveTimer?.Stop();
@@ -272,9 +295,89 @@ namespace SOSGame
             ExecuteComputerMove();
         }
 
-        /// <summary>
-        /// Executes the computer's move.
-        /// </summary>
+        private async Task ExecuteOpenAIMoveAsync()
+        {
+            if (_gameState.CurrentPlayerController is OpenAIPlayerController openAIController)
+            {
+                Move? openAIMove = await openAIController.GetMoveAsync(
+                    _gameState.Board, 
+                    _gameState.GameLogic, 
+                    _gameState.Mode,
+                    _gameState.MoveHistory);
+
+                this.Invoke((MethodInvoker)delegate
+                {
+                    lblLoadingIndicator.Visible = false;
+
+                    if (openAIController.LastErrorType.HasValue)
+                    {
+                        DisplayOpenAIError(openAIController);
+                    }
+
+                    if (openAIMove != null)
+                    {
+                        // Display AI reasoning if available
+                        if (!string.IsNullOrEmpty(openAIController.LastReasoning))
+                        {
+                            string playerName = _gameState.CurrentPlayer == Player.Blue ? "Blue" : "Red";
+                            char letter = openAIMove.Value == CellValue.S ? 'S' : 'O';
+                            
+                            lblAIReasoning.Text = $"🤖 AI ({playerName}): \"{openAIController.LastReasoning}\" → Move: ({openAIMove.Row},{openAIMove.Col})={letter}";
+                            lblAIReasoning.Visible = true;
+                        }
+
+                        Player currentPlayer = _gameState.CurrentPlayer;
+                        bool moveSuccessful = _gameState.MakeMove(openAIMove.Row, openAIMove.Col, openAIMove.Value);
+
+                        if (moveSuccessful)
+                        {
+                            if (_gameRecorder?.IsRecording == true)
+                            {
+                                try
+                                {
+                                    _gameRecorder.RecordMove(openAIMove.Row, openAIMove.Col, openAIMove.Value, currentPlayer);
+                                }
+                                catch (Exception ex)
+                                {
+                                    MessageBox.Show($"Failed to record move:\n{ex.Message}", "Recording Error", 
+                                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                }
+                            }
+
+                            char displayValue = openAIMove.Value == CellValue.S ? 'S' : 'O';
+                            UpdateCellDisplay(openAIMove.Row, openAIMove.Col, displayValue);
+                            UpdateUI();
+
+                            if (_gameState.IsGameOver)
+                            {
+                                HandleGameOver();
+                                _processingComputerMove = false;
+                            }
+                            else if (_gameState.CurrentPlayerController.IsComputer() || _gameState.CurrentPlayerController.IsOpenAI())
+                            {
+                                _processingComputerMove = false;
+                                InitiateComputerMove();
+                            }
+                            else
+                            {
+                                _processingComputerMove = false;
+                            }
+                        }
+                        else
+                        {
+                            _processingComputerMove = false;
+                            UpdateUI();
+                        }
+                    }
+                    else
+                    {
+                        _processingComputerMove = false;
+                        UpdateUI();
+                    }
+                });
+            }
+        }
+
         private void ExecuteComputerMove()
         {
             Move? computerMove = _gameState.GetComputerMove();
@@ -286,7 +389,6 @@ namespace SOSGame
 
                 if (moveSuccessful)
                 {
-                    // Record the move if recording is enabled
                     if (_gameRecorder?.IsRecording == true)
                     {
                         try
@@ -309,7 +411,7 @@ namespace SOSGame
                         HandleGameOver();
                         _processingComputerMove = false;
                     }
-                    else if (_gameState.CurrentPlayerController.IsComputer())
+                    else if (_gameState.CurrentPlayerController.IsComputer() || _gameState.CurrentPlayerController.IsOpenAI())
                     {
                         _processingComputerMove = false;
                         InitiateComputerMove();
@@ -386,7 +488,6 @@ namespace SOSGame
                 return;
             }
 
-            // Disable buttons if current player is a computer
             if (_gameState.CurrentPlayerController.IsComputer())
             {
                 btnPlaceS.Enabled = false;
@@ -395,6 +496,17 @@ namespace SOSGame
                 btnPlaceO.BackColor = Color.LightGray;
                 btnPlaceS.Text = "Place S\n(Computer)";
                 btnPlaceO.Text = "Place O\n(Computer)";
+                return;
+            }
+
+            if (_gameState.CurrentPlayerController.IsOpenAI())
+            {
+                btnPlaceS.Enabled = false;
+                btnPlaceO.Enabled = false;
+                btnPlaceS.BackColor = Color.LightGray;
+                btnPlaceO.BackColor = Color.LightGray;
+                btnPlaceS.Text = "Place S\n(OpenAI)";
+                btnPlaceO.Text = "Place O\n(OpenAI)";
                 return;
             }
 
@@ -474,9 +586,11 @@ namespace SOSGame
             _processingComputerMove = false;
             _gameState.Reset();
             ClearAllCells();
+            lblAIReasoning.Visible = false;
+            lblAIReasoning.Text = "";
             UpdateUI();
 
-            if (_gameState.CurrentPlayerController.IsComputer())
+            if (_gameState.CurrentPlayerController.IsComputer() || _gameState.CurrentPlayerController.IsOpenAI())
             {
                 InitiateComputerMove();
             }
@@ -492,6 +606,45 @@ namespace SOSGame
                     _gridButtons[row, col].BackColor = SystemColors.Control;
                 }
             }
+        }
+
+        private void DisplayOpenAIError(OpenAIPlayerController openAIController)
+        {
+            string message = openAIController.LastErrorMessage ?? "An unknown error occurred.";
+            string title = "OpenAI Error";
+            MessageBoxIcon icon = MessageBoxIcon.Warning;
+
+            if (openAIController.LastErrorType == OpenAIErrorType.Authentication)
+            {
+                title = "Authentication Error";
+                icon = MessageBoxIcon.Error;
+                message += "\n\nPlease check your API key configuration.";
+            }
+            else if (openAIController.LastErrorType == OpenAIErrorType.RateLimit)
+            {
+                title = "Rate Limit Exceeded";
+                icon = MessageBoxIcon.Warning;
+                message += "\n\nPlease wait a moment before making more requests.";
+                message += "\nA random valid move was used to continue the game.";
+            }
+            else if (openAIController.LastErrorType == OpenAIErrorType.Timeout)
+            {
+                title = "Request Timeout";
+                message += "\n\nA random valid move was used to continue the game.";
+            }
+            else if (openAIController.LastErrorType == OpenAIErrorType.Network)
+            {
+                title = "Network Error";
+                message += "\n\nA random valid move was used to continue the game.";
+            }
+
+            if (openAIController.HasReachedFailureThreshold)
+            {
+                message += "\n\n⚠️ Multiple consecutive failures detected.";
+                message += "\nConsider switching to a different player type or checking your API configuration.";
+            }
+
+            MessageBox.Show(message, title, MessageBoxButtons.OK, icon);
         }
     }
 }

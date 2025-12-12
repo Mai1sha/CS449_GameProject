@@ -33,6 +33,16 @@ namespace SOSGame
             PlayerType bluePlayerType = GetBluePlayerType();
             PlayerType redPlayerType = GetRedPlayerType();
             
+            if ((bluePlayerType == PlayerType.OpenAI || redPlayerType == PlayerType.OpenAI) 
+                && !OpenAIConfiguration.IsApiKeyConfigured())
+            {
+                string errorMessage = "OpenAI requires an API key to be configured.\n\n" +
+                                    OpenAIConfiguration.GetConfigurationInstructions();
+                MessageBox.Show(errorMessage, "API Key Required",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            
             StartGame(boardSize, gameMode, bluePlayerType, redPlayerType);
         }
 
@@ -78,12 +88,20 @@ namespace SOSGame
 
         private PlayerType GetBluePlayerType()
         {
-            return blueComputerRadio.Checked ? PlayerType.Computer : PlayerType.Human;
+            if (blueOpenAIRadio.Checked)
+                return PlayerType.OpenAI;
+            if (blueComputerRadio.Checked)
+                return PlayerType.Computer;
+            return PlayerType.Human;
         }
 
         private PlayerType GetRedPlayerType()
         {
-            return redComputerRadio.Checked ? PlayerType.Computer : PlayerType.Human;
+            if (redOpenAIRadio.Checked)
+                return PlayerType.OpenAI;
+            if (redComputerRadio.Checked)
+                return PlayerType.Computer;
+            return PlayerType.Human;
         }
 
         private void btnReplay_Click(object sender, EventArgs e)
@@ -125,6 +143,14 @@ namespace SOSGame
             {
                 MessageBox.Show($"Error loading replay: {ex.Message}", "Load Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void btnSettings_Click(object sender, EventArgs e)
+        {
+            using (SettingsForm settingsForm = new SettingsForm())
+            {
+                settingsForm.ShowDialog(this);
             }
         }
     }

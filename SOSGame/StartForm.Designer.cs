@@ -39,12 +39,15 @@
             bluePlayerLabel = new Label();
             blueHumanRadio = new RadioButton();
             blueComputerRadio = new RadioButton();
+            blueOpenAIRadio = new RadioButton();
             redPlayerGroupBox = new GroupBox();
             redPlayerLabel = new Label();
             redHumanRadio = new RadioButton();
             redComputerRadio = new RadioButton();
+            redOpenAIRadio = new RadioButton();
             chkRecordGame = new CheckBox();
             btnReplay = new Button();
+            btnSettings = new Button();
             bluePlayerGroupBox.SuspendLayout();
             redPlayerGroupBox.SuspendLayout();
             SuspendLayout();
@@ -89,7 +92,7 @@
             // startGameButton
             // 
             startGameButton.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            startGameButton.Location = new Point(220, 380);
+            startGameButton.Location = new Point(220, 440);
             startGameButton.Name = "startGameButton";
             startGameButton.Size = new Size(140, 50);
             startGameButton.TabIndex = 11;
@@ -123,6 +126,7 @@
             // 
             // bluePlayerGroupBox
             // 
+            bluePlayerGroupBox.Controls.Add(blueOpenAIRadio);
             bluePlayerGroupBox.Controls.Add(blueComputerRadio);
             bluePlayerGroupBox.Controls.Add(blueHumanRadio);
             bluePlayerGroupBox.Controls.Add(bluePlayerLabel);
@@ -130,7 +134,7 @@
             bluePlayerGroupBox.ForeColor = Color.Blue;
             bluePlayerGroupBox.Location = new Point(42, 240);
             bluePlayerGroupBox.Name = "bluePlayerGroupBox";
-            bluePlayerGroupBox.Size = new Size(220, 100);
+            bluePlayerGroupBox.Size = new Size(220, 160);
             bluePlayerGroupBox.TabIndex = 9;
             bluePlayerGroupBox.TabStop = false;
             bluePlayerGroupBox.Text = "Blue Player";
@@ -172,8 +176,21 @@
             blueComputerRadio.Text = "Computer";
             blueComputerRadio.UseVisualStyleBackColor = true;
             // 
+            // blueOpenAIRadio
+            // 
+            blueOpenAIRadio.AutoSize = true;
+            blueOpenAIRadio.Font = new Font("Segoe UI", 9F);
+            blueOpenAIRadio.ForeColor = Color.Black;
+            blueOpenAIRadio.Location = new Point(15, 85);
+            blueOpenAIRadio.Name = "blueOpenAIRadio";
+            blueOpenAIRadio.Size = new Size(82, 24);
+            blueOpenAIRadio.TabIndex = 3;
+            blueOpenAIRadio.Text = "OpenAI";
+            blueOpenAIRadio.UseVisualStyleBackColor = true;
+            // 
             // redPlayerGroupBox
             // 
+            redPlayerGroupBox.Controls.Add(redOpenAIRadio);
             redPlayerGroupBox.Controls.Add(redComputerRadio);
             redPlayerGroupBox.Controls.Add(redHumanRadio);
             redPlayerGroupBox.Controls.Add(redPlayerLabel);
@@ -181,7 +198,7 @@
             redPlayerGroupBox.ForeColor = Color.Red;
             redPlayerGroupBox.Location = new Point(290, 240);
             redPlayerGroupBox.Name = "redPlayerGroupBox";
-            redPlayerGroupBox.Size = new Size(220, 100);
+            redPlayerGroupBox.Size = new Size(220, 160);
             redPlayerGroupBox.TabIndex = 10;
             redPlayerGroupBox.TabStop = false;
             redPlayerGroupBox.Text = "Red Player";
@@ -223,11 +240,23 @@
             redComputerRadio.Text = "Computer";
             redComputerRadio.UseVisualStyleBackColor = true;
             // 
+            // redOpenAIRadio
+            // 
+            redOpenAIRadio.AutoSize = true;
+            redOpenAIRadio.Font = new Font("Segoe UI", 9F);
+            redOpenAIRadio.ForeColor = Color.Black;
+            redOpenAIRadio.Location = new Point(15, 85);
+            redOpenAIRadio.Name = "redOpenAIRadio";
+            redOpenAIRadio.Size = new Size(82, 24);
+            redOpenAIRadio.TabIndex = 3;
+            redOpenAIRadio.Text = "OpenAI";
+            redOpenAIRadio.UseVisualStyleBackColor = true;
+            // 
             // chkRecordGame
             // 
             chkRecordGame.AutoSize = true;
             chkRecordGame.Font = new Font("Segoe UI", 10F);
-            chkRecordGame.Location = new Point(42, 360);
+            chkRecordGame.Location = new Point(42, 420);
             chkRecordGame.Name = "chkRecordGame";
             chkRecordGame.Size = new Size(133, 27);
             chkRecordGame.TabIndex = 12;
@@ -237,7 +266,7 @@
             // btnReplay
             // 
             btnReplay.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            btnReplay.Location = new Point(390, 380);
+            btnReplay.Location = new Point(390, 440);
             btnReplay.Name = "btnReplay";
             btnReplay.Size = new Size(120, 50);
             btnReplay.TabIndex = 13;
@@ -245,12 +274,24 @@
             btnReplay.UseVisualStyleBackColor = true;
             btnReplay.Click += btnReplay_Click;
             // 
+            // btnSettings
+            // 
+            btnSettings.Font = new Font("Segoe UI", 9F);
+            btnSettings.Location = new Point(420, 31);
+            btnSettings.Name = "btnSettings";
+            btnSettings.Size = new Size(90, 32);
+            btnSettings.TabIndex = 14;
+            btnSettings.Text = "Settings";
+            btnSettings.UseVisualStyleBackColor = true;
+            btnSettings.Click += btnSettings_Click;
+            // 
             // StartForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(550, 470);
-            MinimumSize = new Size(550, 470);
+            ClientSize = new Size(550, 530);
+            MinimumSize = new Size(550, 530);
+            Controls.Add(btnSettings);
             Controls.Add(btnReplay);
             Controls.Add(chkRecordGame);
             Controls.Add(redPlayerGroupBox);
@@ -285,11 +326,14 @@
         private Label bluePlayerLabel;
         private RadioButton blueHumanRadio;
         private RadioButton blueComputerRadio;
+        private RadioButton blueOpenAIRadio;
         private GroupBox redPlayerGroupBox;
         private Label redPlayerLabel;
         private RadioButton redHumanRadio;
         private RadioButton redComputerRadio;
+        private RadioButton redOpenAIRadio;
         private CheckBox chkRecordGame;
         private Button btnReplay;
+        private Button btnSettings;
     }
 }

@@ -36,6 +36,8 @@
             lblGameStatus = new Label();
             lblBlueScore = new Label();
             lblRedScore = new Label();
+            lblLoadingIndicator = new Label();
+            lblAIReasoning = new Label();
             SuspendLayout();
             // 
             // panelGameBoard
@@ -127,12 +129,42 @@
             lblRedScore.TabIndex = 7;
             lblRedScore.Text = "Red: 0";
             // 
+            // lblLoadingIndicator
+            // 
+            lblLoadingIndicator.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            lblLoadingIndicator.AutoSize = true;
+            lblLoadingIndicator.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            lblLoadingIndicator.ForeColor = Color.DarkOrange;
+            lblLoadingIndicator.Location = new Point(530, 140);
+            lblLoadingIndicator.Name = "lblLoadingIndicator";
+            lblLoadingIndicator.Size = new Size(180, 23);
+            lblLoadingIndicator.TabIndex = 8;
+            lblLoadingIndicator.Text = "AI is thinking...";
+            lblLoadingIndicator.Visible = false;
+            // 
+            // lblAIReasoning
+            // 
+            lblAIReasoning.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            lblAIReasoning.BackColor = Color.LightYellow;
+            lblAIReasoning.BorderStyle = BorderStyle.FixedSingle;
+            lblAIReasoning.Font = new Font("Segoe UI", 9F, FontStyle.Italic);
+            lblAIReasoning.ForeColor = Color.DarkSlateGray;
+            lblAIReasoning.Location = new Point(12, 510);
+            lblAIReasoning.Name = "lblAIReasoning";
+            lblAIReasoning.Padding = new Padding(5);
+            lblAIReasoning.Size = new Size(676, 60);
+            lblAIReasoning.TabIndex = 9;
+            lblAIReasoning.Text = "";
+            lblAIReasoning.Visible = false;
+            // 
             // GameForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(700, 520);
-            MinimumSize = new Size(700, 520);
+            ClientSize = new Size(700, 580);
+            MinimumSize = new Size(700, 580);
+            Controls.Add(lblAIReasoning);
+            Controls.Add(lblLoadingIndicator);
             Controls.Add(lblRedScore);
             Controls.Add(lblBlueScore);
             Controls.Add(lblGameStatus);
@@ -157,5 +189,7 @@
         private System.Windows.Forms.Label lblGameStatus;
         private System.Windows.Forms.Label lblBlueScore;
         private System.Windows.Forms.Label lblRedScore;
+        private System.Windows.Forms.Label lblLoadingIndicator;
+        private System.Windows.Forms.Label lblAIReasoning;
     }
 }
